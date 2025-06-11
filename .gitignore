@@ -1,0 +1,22 @@
+# Python dosyaları
+__pycache__/
+*.py[cod]
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Ortam dosyaları
+.env
+*.env
+openai_api_key.txt
+
+# VSCode ayarları
+.vscode/
+
+# Jupyter Notebook checkpointleri
+.ipynb_checkpoints/
+
+# Sistem dosyaları
+.DS_Store
+Thumbs.db
