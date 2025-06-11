@@ -1,4 +1,6 @@
 import os
+from langchain.text_splitter import CharacterTextSplitter
+
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.embeddings import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
@@ -16,16 +18,26 @@ docs = []
 pdf_paths = glob.glob("pdfs/*.pdf")
 
 if not pdf_paths:
-    print("❌ 'pdfs/' klasöründe hiç PDF yok.")
+    print("❌ 'pdfs/' klasöründe PDF yok.")
     exit()
 
 print(f"🔍 {len(pdf_paths)} PDF bulundu. Yükleniyor...")
 
 for path in pdf_paths:
     loader = PyPDFLoader(path)
-    docs.extend(loader.load())
+    loaded_docs = loader.load()
 
-print(f"✅ Toplam {len(docs)} sayfa yüklendi.")
+    # 🔹 Her dosya için parçalama
+    splitter = CharacterTextSplitter(
+        separator="\n",
+        chunk_size=500,
+        chunk_overlap=50
+    )
+    split_docs = splitter.split_documents(loaded_docs)
+
+    docs.extend(split_docs)
+
+print(f"✅ Toplam {len(docs)} parçaya bölünmüş belge yüklendi.")
 
 # ✅ Belgeleri OpenAI ile vektörleştir ve Chroma'ya kaydet
 embedding = OpenAIEmbeddings()
@@ -45,6 +57,12 @@ while True:
     if question.lower() in ["exit", "q", "quit"]:
         print("👋 Görüşmek üzere!")
         break
+
+    # Cevap üretmeden önce chunk'ları görelim
+    relevant = qa_chain.retriever.get_relevant_documents("kırmızı kablo nerede")
+    for i, d in enumerate(relevant):
+        print(f"\n🎯 Chunk {i+1}:\n{d.page_content}")
+
 
     answer = qa_chain.run(question)
     print(f"📎 Cevap: {answer}\n")
